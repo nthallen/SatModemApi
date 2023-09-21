@@ -1,0 +1,5 @@
+#! /bin/bash
+mkdir build-Skytrac
+cd build-Skytrac
+cmake ../SkytracApi
+

@@ -1,0 +1,2676 @@
+openapi: 3.0.0
+
+info:
+  title: Quicksilver Web API
+  version: 0.2.0
+  description: |
+    Further detail about the available features and configuration options can be found in the User Guide.  
+
+    # Authorization
+    All API calls use bearer authorization except for the following.
+    - POST /api/user/sessions - Uses basic authorization
+    - GET /api/events - Uses query string authorization
+
+    # Errors
+    Since the following errors can happen with any API call or with a broad group of API calls, they are documented here rather than for each API call.
+    - 400 (Bad Request). This may occur for any API call, due to the authorization header being malformed. It may also occur due to malformed or incorrect JSON structure of the request body. Other more specific reasons are documented on a per API basis below.
+    - 401 (Unauthenticated)
+    - 403 (Unauthorized). If the user is authenticated as a user with the Standard role, but the API call requires the Admin role.
+    - 500 (Internal Server Error)
+
+servers:
+  - url: https://192.168.20.1/api
+  - url: https://192.168.60.1/api
+
+tags:
+  - name: Startup Configuration
+    description: Operations affecting the startup configuration
+  - name: Configuration
+    description: Operations affecting the configuration
+  - name: Notifications
+    description: Operations for notifications
+  - name: Users
+    description: Operations for managing users
+  - name: User
+    description: Operations for the session owner
+  - name: Session
+    description: Operations affecting the session
+  - name: Device
+    description: Device operations
+
+paths:
+
+  /cfg/{type}:
+
+    get:
+      summary: Get the complete configuration
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationResponse'
+
+  /cfg/{type}/dns:
+
+    get:
+      summary: Get the DNS settings
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DnsSettingsResponse'
+
+    patch:
+      summary: Set the DNS settings
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DnsSettingsRequest'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: |
+            - Invalid body format. Check schema for details.
+            - One of the addresses is assigned as either the Wi-Fi or Ethernet address.
+
+  /cfg/{type}/eth:
+
+    get:
+      summary: Get the Ethernet settings
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EthSettingsResponse'
+
+    patch:
+      summary: Set the Ethernet settings. Please note that if you change the address at which you are accessing the server you WILL LOSE connection and have to reconnect at the new address. DHCP settings should be updated to ensure that the range falls within the network defined by the address and mask
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EthSettingsRequest'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: |
+            - Invalid body format. Check schema for details
+            - Overlaps with the network defined by the Wi-Fi address and netmask
+            - Address is a set to the network address or broadcast address
+            - Mask is not a valid netmask
+
+  /cfg/{type}/gps/keepOn:
+
+    get:
+      summary: Get the GPS keep on setting. This indicates whether GPS will remain on or turn off and on automatically as needed
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAllRoles: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GpsKeepOn'
+
+    put:
+      summary: Set the GPS keep on setting. This indicates whether GPS will remain on or turn off and on automatically as needed
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GpsKeepOn'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid body format. Check schema for details
+
+  /cfg/{type}/gps/syncTime:
+
+    get:
+      summary: Get the GPS sync time setting. 
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAllRoles: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GpsSyncTime'
+
+    put:
+      summary: Set the GPS sync time setting. If set to true this will synchronize system time with the time received from the GPS fix.  
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GpsSyncTime'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid body format. Check schema for details
+
+  /cfg/{type}/gps/dynPlatformModel:
+
+    get:
+      summary: Get the GPS dynamic platform model setting
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAllRoles: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GpsDynPlatformModel'
+
+    put:
+      summary: Set the GPS dynamic platform model setting
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GpsDynPlatformModel'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid body format. Check schema for details
+
+  /cfg/{type}/ird/mode:
+
+    get:
+      summary: Get the Iridium mode
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAllRoles: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IrdMode'
+
+    put:
+      summary: Set the Iridium mode. Please make sure device's system time is synced before turning on data mode. 
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IrdMode'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid body format. Check schema for details
+
+  /cfg/{type}/outgoingFirewall/rules:
+
+    get:
+      summary: Get the outgoing firewall rules
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAllRoles: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutgoingFirewallRules'
+
+    post:
+      summary: Inserts a rule into the outgoing firewall
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType'
+        - in: query
+          name: before
+          schema:
+            type: string
+          description: The name of the rule to insert the new rule before. If omitted, the rule is appended to the end of the list.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OutgoingFirewallRule'
+      responses:
+        '201':
+          description: Success
+        '400':
+          description: |
+            - Invalid body format. Check schema for details
+            - A rule with the same name already exists
+            - The rule to insert before does not exist
+
+  /cfg/{type}/outgoingFirewall/rules/{name}:
+
+    patch:
+      summary: Update an outgoing firewall rule
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+        - name: name
+          in: path
+          description: Name of the rule to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchOutgoingFirewallRule'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: |
+            - Invalid body format. Check schema for details
+            - A rule with the same name already exists
+        '404':
+          description: The rule does not exist
+
+    delete:
+      summary: Remove a rule from the outgoing firewall
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+        - name: name
+          in: path
+          description: Name of the rule to remove
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Success
+
+  /cfg/{type}/portFwd/entries:
+  
+    get:
+      summary: Get the port forwarding entries
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortFwdEntries'
+
+    post:
+      summary: Add a port forwarding entry
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortFwdEntry'
+      responses:
+        '201':
+          description: Success
+        '400':
+          description: |
+            - Invalid body format. Check schema for details
+            - An entry with the same name already exists
+
+  /cfg/{type}/portFwd/entries/{name}:
+
+    patch:
+      summary: Update a port forwarding entry
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+        - name: name
+          in: path
+          description: Name of port forwarding entry to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchPortFwdEntry'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: |
+            - Invalid body format. Check schema for details
+            - An entry with the same name already exists
+        '404':
+          description: The entry does not exist
+
+    delete:
+      summary: Remove a port forwarding entry
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+        - name: name
+          in: path
+          description: Name of port forwarding entry
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Success
+
+  /cfg/{type}/wifi:
+
+    get:
+      summary: Get the Wi-Fi configuration
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WiFiSettingsResponse'
+
+    patch:
+      summary: Set the Wi-Fi configuration
+      description: Please note that if you change the address at which you are accessing the server you
+        WILL LOSE connection and have to reconnect at the new address. DHCP settings should be updated
+        to ensure that the range falls within the network defined by the address and mask. 
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WiFiSettingsRequest'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: |
+            - Invalid body format. Check schema for details
+            - Overlaps with the network defined by the Ethernet address and netmask
+            - Address is a set to the network address or broadcast address
+            - Mask is not a valid netmask
+
+  /cfg/{type}/wifi/enabled:
+
+    get:
+      summary: Get the Wi-Fi enabled configuration
+      tags:
+        - Configuration
+      security:
+        - BearerAuthAllRoles: []
+      parameters:
+        - name: type
+          in: path
+          description: The configuration type
+          required: true
+          schema:
+            $ref: '#/components/schemas/CfgType' 
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: boolean
+
+  /cfg/startup:
+    patch:
+      summary: Set the startup configuration
+      tags:
+        - Startup Configuration
+      security:
+        - BearerAuthAdminOnly: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigurationRequest'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: |
+            - Invalid body format. Check schema for details.
+            - Configuration's web API version is not supported by the firmware. The major version numbers differ.
+            - Any of the reasons for the 400 response that are documented for other API that modify the configuration
+
+  /device/certificate:
+    post:
+      summary: Update the HTTPS certificate. If certificate and key are not provided they will be automatically generated
+      tags:
+        - Device
+      security: 
+        - BearerAuthAdminOnly: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Certificate'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid body format
+  
+  /device/saveRuntimeConfig:
+    post:
+      summary: Copy the runtime configuration to the startup configuration
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '204':
+          description: Success
+
+  /device/resetStartupConfig:
+    post:
+      summary: Reset startup configuration to defaults
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '204':
+          description: Success
+
+  /device/exportUsers:
+    get:
+      summary: Export the users to a file with the encrypted passwords. This file can be used to import the users to any Quicksilver device
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersExport'
+
+  /device/importUsers:
+    post:
+      summary: Add and modify users from the import file. Does not remove any users and does not modify the user doing the import. Cannot be used to modify passwords or set a new password
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsersExport'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid body format. Check schema for details.
+
+  /device/inSafeMode:
+
+    get:
+      summary: Get whether the device booted up in safe mode
+      tags:
+        - Device
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: boolean
+                description: Whether the device booted up in safe mode
+
+  /device/fw/image:
+
+    delete:
+      summary: Remove the staged device firmware image
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '204':
+          description: Success
+
+    get:
+      summary: Get info about the currently staged device firmware image
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+                description: Name of the staged file
+                example: Quicksilver_1_0_0.swu
+        '404':
+          description: There is no device firmware image staged.
+
+    put:
+      summary: Upload an image to be used for updating the device firmware
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - in: header
+          name: Content-Disposition
+          schema:
+            type: string
+            example: attachment; filename="Image.bin"
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Missing or invalid Content-Disposition header
+
+  /device/fw/update:
+
+    post:
+      summary: Update the device firmware using the staged image
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [started, partial, failed, success]
+                    description: |
+                      The result / status of the update.
+                      - started - The update has started
+                      - partial - The update failed leaving partial changes
+                      - failed - The update failed leaving no changes
+                      - success - The update was successful
+                    example: failed
+                  error:
+                    type: string
+                    description: An error message. Blank for started and success statuses.
+                    example: Not compatible with the current version
+                  willReboot:
+                    type: boolean
+                    description: Whether the update will reboot the device automatically when done.
+                      If false, then a reboot is not required.
+
+  /device/fw/lastUpdateResult:
+
+    get:
+      summary: Gets the result of the last product firmware update
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                  success:
+                    type: boolean
+                    description: Whether the update was successful or not
+                    example: false
+                  error:
+                    type: string
+                    description: Error message for failed updates. Blank if the update was
+                      successful. Partial updates result in the device entering recovery mode.
+                    example: The update is not compatible with the current version
+        '404':
+          description: The product firmware has never been updated
+
+  /device/ird/fw/image:
+
+    delete:
+      summary: Remove the staged Iridium firmware image
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '204':
+          description: Success
+
+    get:
+      summary: Get info about the currently staged Iridium firmware image
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+                description: Name of the staged file
+                example: TA3260.bin
+        '404':
+          description: There is no Iridium firmware image staged
+
+    put:
+      summary: Upload an image to be used for updating the Iridium firmware
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - in: header
+          name: Content-Disposition
+          schema:
+            type: string
+            example: attachment; filename="Image.bin"
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Missing or invalid Content-Disposition header
+
+  /device/ird/fw/update:
+
+    post:
+      summary: Update the Iridium firmware using the staged image
+      description: This is available only when Iridium is in the available, recovery mode or unsupported API state and is in the inactive mode.
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+              enum: [primary, fallback]
+              description: The slot to update
+              example: primary
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid body format. Check schema for details
+        '500':
+          description: Could be due to Iridium not being in the inactive mode or in one of the following states; available, recovery mode or unsupported API
+
+  /device/ird/selfTest:
+
+    post:
+      summary: Run an Iridium self test
+      description: This is available only when Iridium is in the available state and is in the inactive mode.
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '204':
+          description: Success
+        '500':
+          description: Could be due to Iridium not being in the available state or not being in the inactive mode.
+
+  /device/reboot:
+
+    post:
+      summary: Reboot the device
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - in: query
+          name: recovery
+          schema:
+            type: boolean
+            default: false
+          description: Whether to reboot to recovery mode
+      responses:
+        '204':
+          description: Success
+
+  /device/usage:
+
+    delete:
+      summary: Clear all data usage records. Please expect some unrecorded if this command is run during an active data session. It will take at least 5 minutes for new records to appear
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '204':
+          description: Success
+
+  /device/usage/year:
+
+    get:
+      summary: Get a yearly summary of data usage. Time frame can be specified by the user. Always in UTC
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - in: query
+          name: start
+          schema:
+            type: string
+            description: datetime format ISO 8601 YYYY
+            example: "2020"
+          required: false
+        - in: query
+          name: end
+          schema:
+            type: string
+            description: datetime format ISO 8601 YYYY
+            example: "2021"
+          required: false
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataUsageEntry'
+        '400':
+          description: Invalid query format. Check schema for details
+
+  /device/usage/month:
+
+    get:
+      summary: Get a monthly summary of data usage. Time frame can be specified by the user. Always in UTC
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - in: query
+          name: start
+          schema:
+            type: string
+            description: datetime format ISO 8601 YYYY-MM
+            example: "2020-01"
+          required: false
+        - in: query
+          name: end
+          schema:
+            type: string
+            description: datetime format ISO 8601 YYYY-MM
+            example: "2021-02"
+          required: false
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataUsageEntry'
+        '400':
+          description: Invalid query format. Check schema for details
+
+
+  /device/usage/day:
+
+    get:
+      summary: Get a daily summary of data usage. Time frame can be specified by the user, please note we can currently only display this information for 95 days in the past. Always in UTC
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - in: query
+          name: start
+          schema:
+            type: string
+            description: datetime format ISO 8601 YYYY-MM-DD
+            example: "2020-01-01"
+          required: false
+        - in: query
+          name: end
+          schema:
+            type: string
+            description: datetime format ISO 8601 YYYY-MM-DD
+            example: "2021-02-20"
+          required: false
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataUsageEntry'
+        '400':
+          description: Invalid query format. Check schema for details
+
+
+  /device/usage/hour:
+
+    get:
+      summary: Get an hourly summary of data usage. Time frame can be specified by the user, please note we can currently only display this information for 64 days in the past. Always in UTC
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - in: query
+          name: start
+          schema:
+            type: string
+            description: datetime format ISO 8601 YYYY-MM-DDTHH
+            example: "2020-01-01T05"
+          required: false
+        - in: query
+          name: end
+          schema:
+            type: string
+            description: datetime format ISO 8601 YYYY-MM-DDTHH
+            example: "2021-02-20T23"
+          required: false
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataUsageEntry'
+        '400':
+          description: Invalid query format. Check schema for details
+
+  /device/usage/five:
+
+    get:
+      summary: Get a summary of data usage recorded in five minute increments. Time frame can be specified by the user, please note we can currently only display this information for 48 hours in the past. Always in UTC 
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - in: query
+          name: start
+          schema:
+            type: string
+            description: datetime format  ISO 8601 YYYY-MM-DDTHH:mm
+            example: "2020-01-01T05:00"
+          required: false
+        - in: query
+          name: end
+          schema:
+            type: string
+            description: datetime format ISO 8601 YYYY-MM-DDTHH:mm
+            example: "2021-02-20T23:59"
+          required: false
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataUsageEntry'
+        '400':
+          description: Invalid query format. Check schema for details
+
+  /socket:
+    get:
+      summary: Start a WebSocket connection
+      description: |
+        Establishes a WebSocket connection for receiving events messages. When the connection is first made,
+        an "id" event will be sent to the connection with the data being a string ID that uniquely identifies
+        the connection and which can be used with the /events API to subscribe or unsubscribe to other events.
+        Initially, no event are subscribed to.
+      tags:
+        - Events
+      security:
+        - QueryAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [event]
+                      name:
+                        type: string
+                        enum: [id]
+                      data:
+                        type: string
+                        example: "33AA33BB33AA33BB33AA33BB33AA33BB"
+                        description: Event connection Id. 32 hex characters.
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [event]
+                      name:
+                        type: string
+                        enum: [notificationAdded]
+                      data:
+                        $ref: '#/components/schemas/Notification'
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [event]
+                      name:
+                        type: string
+                        enum: [constellationStateUpdated]
+                      data:
+                        $ref: '#/components/schemas/IrdConstellation'
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [event]
+                      name:
+                        type: string
+                        enum: [gpsUpdated]
+                      data:
+                        $ref: '#/components/schemas/GpsFix'
+        '400':
+          description: Bad Request, can be caused by missing or distorted headers
+
+  /events/{id}/subscriptions:
+
+    get:
+      summary: Get the list of events that an event connection is subscribed to
+      tags:
+        - Events
+      security:
+        - BearerAuthAllRoles: []
+      parameters:
+        - name: id
+          in: path
+          description: Id of event connection
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Events'
+        '404':
+          description: The event connection does not exist
+
+    put:
+      summary: Set the list of events that an event connection is subscribed to
+      tags:
+        - Events
+      security:
+        - BearerAuthAllRoles: []
+      parameters:
+        - name: id
+          in: path
+          description: Id of event connection
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Events'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: |
+            - Invalid body format. Check schema for details
+            - Unknown event name
+        '404':
+          description: The event connection does not exist
+
+  /events/{id}/subscriptions/{name}:
+
+    get:
+      summary: Get whether an event connection is subscribed to a specific event
+      tags:
+        - Events
+      security:
+        - BearerAuthAllRoles: []
+      parameters:
+        - name: id
+          in: path
+          description: Id of event connection
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: path
+          description: The name of the event
+          required: true
+          schema:
+            $ref: '#/components/schemas/EventName'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: boolean
+                description: Whether the event connection should be subscribed to the event
+        '404':
+          description: The event connection or the event name does not exist
+
+    put:
+      summary: Set whether an event connection is subscribed to a specific event
+      tags:
+        - Events
+      security:
+        - BearerAuthAllRoles: []
+      parameters:
+        - name: id
+          in: path
+          description: Id of event connection
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: path
+          description: The name of the event
+          required: true
+          schema:
+            $ref: '#/components/schemas/EventName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: boolean
+              description: Whether the event connection should be subscribed to the event
+      responses:
+        '204':
+          description: Success
+        '404':
+          description: The event connection or the event name does not exist
+
+  /device/clients:
+
+    get:
+      summary: Get a list of currently connected LAN clients. A '?' hostname value indicates that the client has not shared their hostname with the modem. Perhaps the client connected with a static IP or has not yet refreshed it's DHCP lease since the board's last reboot.
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Client'
+
+  /device/info:
+
+    get:
+      summary: Gets information about the device
+      tags:
+        - Device
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceInfo'
+
+  /device/ird/apiVersion:
+
+    get:
+      summary: Get the active API version for the Iridium modem
+      tags:
+        - Device
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IrdApiVersion'
+
+  /device/ird/bootInfo:
+
+    get:
+      summary: Get the boot info for the Iridium modem
+      tags:
+        - Device
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IrdBootInfo'
+
+  /device/ird/constellation:
+
+    get:
+      summary: Get the Iridium constellation state
+      description: This is available only when Iridium is in the available state.
+      tags:
+        - Device
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IrdConstellation'
+        '500':
+          description: Could be due to Iridium not being in the available state.
+
+  /device/ird/fw/slot/{slot}:
+
+    get:
+      summary: Get information about an Iridium firmware slot
+      description: This is available only when Iridium is in the available state.
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: slot
+          in: path
+          description: The Iridium firmware slot to retrieve info about
+          required: true
+          schema:
+            type: string
+            enum: [primary, fallback]
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  version:
+                    type: string
+                    description: The 9770 serial number in the format "major.minor.patch".
+                    example: "1.0.2"
+                  buildInfo:
+                    type: string
+                  hash:
+                    type: string
+        '500':
+          description: Could be due to Iridium not being in the available state.
+
+  /device/ird/hw:
+
+    get:
+      summary: Get the hardware info for the Iridium modem
+      description: This is available only when Iridium is in the available state.
+      tags:
+        - Device
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IrdHw'
+        '500':
+          description: Could be due to Iridium not being in the available state.
+
+  /device/ird/sim:
+
+    get:
+      summary: Get SIM info
+      description: This is available only when Iridium is in the available state.
+      tags:
+        - Device
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IrdSim'
+        '500':
+          description: Could be due to Iridium not being in the available state.
+
+  /device/ird/state:
+
+    get:
+      summary: Get the state for the Iridium modem
+      tags:
+        - Device
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IrdState'
+
+  /device/ird/reports/hwtest:
+
+    get:
+      summary: Get HW test report
+      description: This is available only when Iridium is in the available state.
+      tags:
+        - Device
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IrdHwTestReport'
+        '500':
+          description: Could be due to Iridium not being in the available state.
+
+  /device/time:
+
+    get:
+      summary: Get time info
+      tags:
+        - Device
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeInfo'
+
+  /device/gps/fix:
+
+    get:
+      summary: Get the last GPS fix
+      description: This does not turn on the GPS receiver nor does it wait for a fix. It simply returns the last fix obtained from the GPS receiver. The last GPS fix is lost when the device is power cycled.
+      tags:
+        - Device
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GpsFix'
+
+  /device/gps/power:
+
+    get:
+      summary: Get the GPS power state
+      tags:
+        - Device
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: boolean
+                description: Whether the GPS is currently powered on
+
+  /device/wifi/available:
+
+    get:
+      summary: Get the Wi-Fi available status
+      tags:
+        - Device
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: boolean
+
+  /device/backup/available:
+
+    get:
+      summary: Get the user data backup available status
+      tags:
+        - Device
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: boolean
+  
+  /device/backup/data:
+    
+    get:
+      summary: Download the user data backup
+      tags: 
+        - Device
+      security: 
+        - BearerAuthAdminOnly: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackupData'
+    
+    delete: 
+      summary: Delete the user data backup
+      tags: 
+        - Device
+      security: 
+        - BearerAuthAdminOnly: []
+      responses: 
+        '204':
+          description: Success
+
+  /notifications:
+
+    get:
+      summary: Get the list of notifications
+      tags:
+        - Notifications
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+
+  /notifications/{id}:
+    delete:
+      summary: Delete a notification
+      tags:
+        - Notifications
+      security:
+        - BearerAuthAllRoles: []
+      parameters:
+        - name: id
+          in: path
+          description: Id of notification to delete
+          required: true
+          schema:
+            type: number
+      responses:
+        '204':
+          description: Success
+
+  /user:
+
+    get:
+      summary: Get the session owner
+      tags:
+        - User
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUser'
+
+  /user/changePassword:
+
+    post:
+      summary: Change the session owner's password
+      tags:
+        - User
+      security:
+        - BearerAuthAllRoles: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                old:
+                  $ref: '#/components/schemas/Password'
+                new:
+                  $ref: '#/components/schemas/Password'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid body format. Check schema for details
+        '403':
+          description: Incorrect old password
+
+  /user/sessions:
+    delete:
+      summary: Delete all of the sessions for the session owner. Not just this session.
+      tags:
+        - User
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '204':
+          description: Success
+
+  /session:
+
+    delete:
+      summary: Delete the session so that the tokens will no longer work
+      tags:
+        - Session
+      security:
+        - BearerAuthAllRoles: []
+      responses:
+        '204':
+          description: Success
+
+  /session/refresh:
+
+    post:
+      summary: Generate new tokens for the current session and resets the session timeout
+      tags:
+        - Session
+      security:
+        - BearerAuthAllRoles: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+              description: Current refresh token for the session
+              example: AAABBBCCCDDDEEEFFF00011122233344455566677788
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: BBBBBBCCCDDDEEEFFF00011122233344455566677788
+                  refreshToken:
+                    type: string
+                    example: CCCBBBCCCDDDEEEFFF00011122233344455566677788
+        '400':
+          description: Invalid body format. Check schema for details
+        '403':
+          description: Incorrect refresh token
+
+  /sessions:
+
+    post:
+      summary: Generate a new session for the user which will timeout and be deleted after 15 minutes
+      tags:
+        - Session
+      security:
+        - BasicAuthAllRoles: []
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  refreshToken:
+                    type: string
+
+  /users:
+
+    get:
+      summary: Get all users
+      tags:
+        - Users
+      security:
+        - BearerAuthAdminOnly: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetUser'
+
+    post:
+      summary: Add a user
+      tags:
+        - Users
+      security:
+        - BearerAuthAdminOnly: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUser'
+      responses:
+        '201':
+          description: Success
+        '400':
+          description: |
+            - Invalid body format. Check schema for details
+            - User with the same name already exists
+          
+  /users/{name}:
+
+    patch:
+      summary: Modify a user
+      tags:
+        - Users
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: name
+          in: path
+          description: Name of user
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchUser'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: |
+            - Invalid body format. Check schema for details
+            - User with the same name already exists
+        '403':
+          description: |
+            - Trying to change the role of the only admin user. There must be at least one admin
+            - Cannot use this API to change the session owner's password. Use /user/changePassword instead.
+          
+    delete:
+      summary: Delete a user
+      tags:
+        - Users
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: name
+          in: path
+          description: Name of user
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Trying to delete the only admin user. There must be at least one admin
+
+  /users/{name}/sessions:
+
+    delete:
+      summary: Remove all of a user's sessions
+      tags:
+        - Users
+      security:
+        - BearerAuthAdminOnly: []
+      parameters:
+        - name: name
+          in: path
+          description: Name of user
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Success
+
+components:
+
+  securitySchemes:
+    BasicAuthAllRoles:
+      type: http
+      scheme: basic
+    BearerAuthAdminOnly:
+      type: http
+      scheme: bearer
+    BearerAuthAllRoles:
+      type: http
+      scheme: bearer
+    QueryAuthAllRoles:
+      type: apiKey
+      in: query
+      name: token
+
+  schemas:
+
+    CfgType:
+      type: string
+      enum:
+        - runtime
+        - startup
+
+    ConfigurationRequest:
+      type: object
+      properties:
+        webApiVersion:
+          type: string
+          description: "{major}.{minor}.{patch}. The web API version that produced this configuration."
+          example: '0.2.0'
+        dns:
+          $ref: '#/components/schemas/DnsSettingsRequest'
+        eth:
+          $ref: '#/components/schemas/EthSettingsRequest'
+        gps:
+          type: object
+          properties:
+            keepOn:
+              $ref: '#/components/schemas/GpsKeepOn'
+            syncTime:
+              $ref: '#/components/schemas/GpsSyncTime'
+            dynPlatformModel:
+              $ref: '#/components/schemas/GpsDynPlatformModel'
+        wifi:
+          $ref: '#/components/schemas/WiFiSettingsRequest'
+        ird:
+          type: object
+          properties:
+            mode:
+              $ref: '#/components/schemas/IrdMode'
+        outgoingFirewall:
+          type: object
+          properties:
+            rules:
+              $ref: '#/components/schemas/OutgoingFirewallRules'
+        portFwd:
+          type: object
+          properties:
+            entries:
+              $ref: '#/components/schemas/PortFwdEntries'
+
+    ConfigurationResponse:
+      type: object
+      properties:
+        webApiVersion:
+          type: string
+          description: "{major}.{minor}.{patch}. The web API version that produced this configuration."
+          example: '0.2.0'
+        dns:
+          $ref: '#/components/schemas/DnsSettingsResponse'
+        eth:
+          $ref: '#/components/schemas/EthSettingsResponse'
+        gps:
+          type: object
+          properties:
+            keepOn:
+              $ref: '#/components/schemas/GpsKeepOn'
+            syncTime:
+              $ref: '#/components/schemas/GpsSyncTime'
+            dynPlatformModel:
+              $ref: '#/components/schemas/GpsDynPlatformModel'
+          required:
+          - keepOn
+          - syncTime
+          - dynPlatformModel
+        wifi:
+          $ref: '#/components/schemas/WiFiSettingsResponse'
+        ird:
+          type: object
+          properties:
+            mode:
+              $ref: '#/components/schemas/IrdMode'
+          required:
+          - mode
+        outgoingFirewall:
+          type: object
+          properties:
+            rules:
+              $ref: '#/components/schemas/OutgoingFirewallRules'
+          required:
+          - rules
+        portFwd:
+          type: object
+          properties:
+            entries:
+              $ref: '#/components/schemas/PortFwdEntries'
+          required:
+          - entries
+      required:
+      - dns
+      - eth
+      - gps
+      - wifi
+      - ird
+      - outgoingFirewall
+      - portFwd
+
+    DhcpEnabled:
+      type: boolean
+      description: Whether the DHCP server is enabled
+
+    DhcpRange:
+      type: object
+      properties:
+        start:
+          type: string
+          description: The start address of the range. Must be specified in IPv4 dotted notation.
+          example: "10.10.1.100"
+        end:
+          type: string
+          description: The end address of the range. Must be specified in IPv4 dotted notation.
+          example: "10.10.1.200"
+        lease:
+          type: integer
+          description: Lease time in minutes. Must be >= 1.
+          example: 1440
+      required:
+      - start
+      - end
+      - lease
+
+    DnsSettingsRequest:
+      type: object
+      properties:
+        primary:
+          type: string
+          description: The address of the primary DNS server. Must be specified in IPv4 dotted notation.
+          example: "1.1.1.1"
+        secondary:
+          type: string
+          description: The address of the secondary DNS server. Must be specified in IPv4 dotted notation.
+          example: "1.0.0.1"
+
+    DnsSettingsResponse:
+      allOf:
+      - $ref: '#/components/schemas/DnsSettingsRequest'
+      - type: object
+        required:
+        - primary
+        - secondary
+
+    EthSettingsRequest:
+      type: object
+      properties:
+        addr:
+          type: string
+          description: The address assigned to the Ethernet interface. Must be specified in IPv4 dotted notation.
+          example: "192.168.1.1"
+        mask:
+          type: string
+          description: The subnet mask assigned to the Ethernet interface. Must be specified in IPv4 dotted notation.
+          example: "255.255.255.0"
+        dhcp:
+          type: object
+          properties:
+            enabled:
+              $ref: '#/components/schemas/DhcpEnabled'
+            ranges:
+              type: array
+              items:
+                $ref: '#/components/schemas/DhcpRange'
+
+    EthSettingsResponse:
+      allOf:
+      - $ref: '#/components/schemas/EthSettingsRequest'
+      - type: object
+        required:
+        - addr
+        - mask
+        - dhcp
+        properties:
+          dhcp:
+            required:
+            - enabled
+            - ranges
+
+    GpsKeepOn:
+      type: boolean
+      description: Whether to keep the GPS receiver on when not required for any other service
+
+    GpsSyncTime:
+      type: boolean
+      description: Whether to periodically synchronize the system time using the GPS receiver
+
+    GpsDynPlatformModel:
+      type: string
+      enum: [portable, stationary, pedestrian, automotive, sea, airborneUnder1g, airborneUnder2g, airborneUnder4g, wrist]
+
+    WiFiSettingsRequest:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: Whether Wi-Fi is enabled
+        addr:
+          type: string
+          description: The address assigned to the Wi-Fi interface. Must be specified in IPv4 dotted notation.
+          example: "192.168.2.1"
+        mask:
+          type: string
+          description: The subnet mask assigned to the Wi-Fi interface. Must be specified in IPv4 dotted notation.
+          example: "255.255.255.0"
+        ssid:
+          type: string
+          description: The SSID used for the Wi-Fi network. Must be 1-30 characters.
+          example: MyNetwork
+        visible:
+          type: boolean
+          description: Whether the SSID should be broadcast
+        security:
+          type: string
+          enum: [open, wpa2]
+          description: The type of security to use
+          example: wpa2
+        wpa2Pwd:
+          type: string
+          description: The WPA2 password. Must be 8-25 characters, with the exception that a blank string is allowed if security is open.
+          example: Quicksilver123456
+        dhcp:
+          type: object
+          properties:
+            enabled:
+              $ref: '#/components/schemas/DhcpEnabled'
+            ranges:
+              type: array
+              items:
+                $ref: '#/components/schemas/DhcpRange'
+
+    WiFiSettingsResponse:
+      allOf:
+      - $ref: '#/components/schemas/WiFiSettingsRequest'
+      - type: object
+        required:
+        - enabled
+        - addr
+        - mask
+        - ssid
+        - visible
+        - security
+        - wpa2Pwd
+        - dhcp
+        properties:
+          dhcp:
+            required:
+            - enabled
+            - ranges
+
+    IrdSettings:
+      type: object
+      properties:
+        mode:
+          $ref: '#/components/schemas/IrdMode'
+      required:
+      - mode
+
+    IrdMode:
+      type: string
+      enum: [inactive, data]
+
+    OutgoingFirewallRules:
+      type: array
+      items:
+        $ref: '#/components/schemas/OutgoingFirewallRule'
+
+    PatchOutgoingFirewallRule:
+      type: object
+      properties:
+        name:
+          type: string
+          description: |
+            Unique display name.
+            Must be 1-15 characters and only contain alphanumeric characters, '_', '-', '.', and '~'.
+          example: MyRule
+        protocol:
+          type: string
+          enum: [any, tcp, udp, icmp]
+          description: The protocol that this rule matches. "any" will match any protocol.
+          example: tcp
+        destAddr:
+          type: string
+          description: Either "any", an IPv4 address in dotted notation, or a subnet specified using an IPv4 address followed by
+            a forward slash and prefix between 0 and 32. When specifying a subnet, the IP address can be any address in the
+            subnet and will be converted to the subnet's network address (first address of the subnet).
+          example: "192.168.1.0/24"
+        destAddrNeg:
+          type: boolean
+          description: Whether the rule matches every address not specified by destAddr. Must be false if destAddr is "any".
+          example: false
+        destPort:
+          type: string
+          description: Either "any", a single port, or a port range specified with a dash and no spaces. The ports must be 0-65535.
+          example: "5000-6000"
+        destPortNeg:
+          type: boolean
+          description: Whether the rule matches every port not specified by destPort. Must be false if destPort is "any".
+          example: false
+        action:
+          type: string
+          description: What to do when a packet is matched by this rule.
+          enum: [accept, drop]
+
+    OutgoingFirewallRule:
+      allOf:
+      - $ref: '#/components/schemas/PatchOutgoingFirewallRule'
+      - type: object
+        required:
+        - name
+        - protocol
+        - destAddr
+        - destAddrNeg
+        - destPort
+        - destPortNeg
+        - action
+
+    PortFwdEntries:
+      type: array
+      items:
+        $ref: '#/components/schemas/PortFwdEntry'
+
+    PatchPortFwdEntry:
+      type: object
+      properties:
+        name:
+          type: string
+          description: |
+            Unique display name
+            Must be 1-15 characters and only contain alphanumeric characters, '_', '-', '.', and '~'.
+          example: MyServer
+        extPort:
+          type: number
+          description: The external port. Must be 0-65535.
+          example: 22
+        intAddr:
+          type: string
+          description: The internal IP address. Must be specified in IPv4 dotted notation.
+          example: "192.168.1.201"
+        intPort:
+          type: number
+          description: The internal port. Must be 0-65535.
+          example: 22
+        protocol:
+          type: string
+          description: The protocol to forward.
+          enum: [tcp, udp, both]
+          example: tcp
+
+    PortFwdEntry:
+      allOf:
+      - $ref: '#/components/schemas/PatchPortFwdEntry'
+      - type: object
+        required:
+        - name
+        - extPort
+        - intAddr
+        - intPort
+        - protocol
+
+    DeviceInfo:
+      type: object
+      properties:
+        version:
+          type: string
+          example: Quicksilver 1.0.1r2339
+        serial:
+          type: string
+          description: Quicksilver serial number
+          example: "3232342"
+        hwRevision:
+          type: string
+          description: Quicksilver Hardware revision
+          example: "B"
+        webApiVersion:
+          type: string
+          description: Quicksilver web API version
+          example: "1.0.0"
+        ethMac:
+          type: string
+          example: "32:34:55:22:22:11"
+        wifiMac:
+          type: string
+          example: "32:34:55:22:22:11"
+      required:
+      - version
+      - serial
+      - hwRevision
+      - webApiVersion
+      - ethMac
+      - wifiMac
+
+    TimeInfo:
+      type: object
+      properties:
+        system:
+          type: number
+          description: System time as the number of seconds since the Unix 1970 epoch
+        uptime:
+          type: number
+          description: Number of seconds since the last startup
+      required:
+      - system
+      - uptime
+
+    GpsFix:
+      type: object
+      properties:
+        time:
+          type: number
+          description: UTC time as the number of seconds since the Unix 1970 epoch
+        type:
+          type: string
+          enum: [invalid, time only, dead reckoning, 2D, 3D]
+          description: The fix type.
+        lat:
+          type: number
+          description: Latitude
+        lng:
+          type: number
+          description: Longitude
+        alt:
+          type: number
+          description: Altitude
+        gvel:
+          type: number
+          description: Ground Velocity
+        vvel:
+          type: number
+          description: Vertical Velocity
+        hdop:
+          type: number
+          description: HDOP
+        vdop:
+          type: number
+          description: VDOP
+        sats:
+          type: number
+          description: The number of satellites used for the fix
+      required:
+      - time
+      - type
+      - lat
+      - lng
+      - alt
+      - gvel
+      - vvel
+      - hdop
+      - vdop
+      - sats
+
+    IrdApiVersion:
+      type: string
+      description: The 9770 active API version number in the format "major.minor.patch".
+      example: "1.0.0"
+
+    IrdBootInfo:
+      type: object
+      properties:
+        imageType:
+          type: string
+          enum: [production, invalid]
+          example: "production"
+        version:
+          type: string
+          description: The 9770 Firmware version number in the format "major.minor.patch". (version is bootloader version if in recovery mode.)
+          example: "1.0.2"
+        buildInfo:
+          type: string
+        bootSource:
+          type: string
+          enum: [primary, fallback, recovery, alt]
+          example: "primary"
+      required:
+      - imageType
+      - version
+      - buildInfo
+      - bootSource
+
+    IrdConstellation:
+      type: object
+      properties:
+        visible:
+          type: boolean
+        signalBars:
+          type: number
+          description: 0 - 5 bars
+          example: 3
+        signalLevel:
+          type: number
+          description: dBm
+          example: 35
+      required:
+      - visible
+      - signalBars
+      - signalLevel
+
+    IrdHw:
+      type: object
+      properties:
+        version:
+          type: string
+          example: TA3235
+        serial:
+          type: string
+          description: The 9770 serial number
+        imei:
+          type: string
+        paTemp:
+          type: number
+          description: The temperature of the power amplifier
+        boardTemp:
+          type: number
+          description: The temperature of the board
+      required:
+      - version
+      - serial
+      - imei
+      - paTemp
+      - boardTemp
+
+    IrdSim:
+      type: object
+      properties:
+        present:
+          type: string
+          description: Whether the SIM card is physically present
+          enum: [no, yes, unknown]
+          example: "yes"
+        connected:
+          type: boolean
+          description: Whether the 9770 is communicating with the SIM card without errors
+        iccid:
+          type: string
+      required:
+      - present
+      - connected
+      - iccid
+
+    IrdState:
+      type: string
+      description: The state of Iridium
+      enum: [available, busy, faulty, recovery mode, unsupported api]
+      example: "available"
+
+    IrdHwTestReport:
+      type: object
+      properties:
+        passed:
+          type: boolean
+        warnings:
+          type: number
+          description: Number of warnings generated by the self test
+        report:
+          type: string
+      required:
+      - passed
+      - warnings
+      - report
+      
+    Certificate:
+      type: object
+      properties:
+        cert:
+          type: string
+          description: HTTPS certificate
+        key: 
+          type: string
+          description: HTTPS Key
+      required:
+        - cert
+        - key
+
+    DataUsageEntry:
+      type: object
+      properties:
+        start:
+          type: string
+          description: date and time in ISO 8601 format YYYY-MM-DDThh:mm:ss recorded in UTC
+          example: "2018-01-20T12:35"
+        rx:
+          type: number
+          description: amount of data received in bytes
+          example: "9237"
+        tx:
+          type: number
+          description: amount of data transmitted in bytes
+          example: "9237"
+      required:
+      - start
+      - rx
+      - tx
+
+    Client:
+      type: object
+      properties:
+        intf:
+          type: string
+          description: wifi or eth
+          example: wifi
+        mac:
+          type: string
+          example: "32:34:55:22:22:11"
+        hostname:
+          type: string
+          example: "MyPC"
+        addr:
+          type: string
+          example: "192.168.1.189"
+      required:
+      - intf
+      - mac
+      - hostname
+      - addr
+
+    Events:
+      type: array
+      description: The list of events that will be sent to the event connection
+      items:
+        $ref: '#/components/schemas/EventName'
+
+    EventName:
+      type: string
+      description: Event name
+      enum: [constellationStateUpdated, gpsUpdated, notificationAdded]
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: number
+          description: A number unique among the notifications that can be used to delete a notification
+          example: 3
+        time:
+          type: string
+          format: date-time
+          description: ISO-8601 time that the notification was added. Always UTC.
+          example: "2021-01-30T08:30:00Z"
+        title:
+          type: string
+          description: A short title for the notification
+          example: "Startup Error"
+        msg:
+          type: string
+          description: A message explaining the details of the notification
+          example: "Failed to apply startup configuration for ..."
+
+    PatchUser:
+      type: object
+      properties:
+        name:
+          type: string
+          description: |
+            Name of user.
+            Must be 1-16 characters and contains only alphanumeric characters, '_', '-', '.', and '~' so that it is URL safe.
+          example: John
+        role:
+          type: string
+          enum: [admin, standard]
+          description: Role
+        pwd:
+          $ref: '#/components/schemas/Password'
+        locked:
+          type: boolean
+          description: Locked status
+          default: false
+
+    PostUser:
+      allOf:
+      - $ref: '#/components/schemas/PatchUser'
+      - type: object
+        required:
+        - name
+        - role
+        - pwd
+    
+    GetUser:
+      allOf:
+      - $ref: '#/components/schemas/PostUser'
+      - type: object
+        properties:
+          sessions:
+            type: number
+            description: Number of current sessions
+        required:
+        - locked
+        - sessions
+
+    UsersExport:
+      type: string
+      description: Undocumented
+      
+    BackupData:
+      type: string
+      description: Undocumented
+
+    Password:
+      type: string
+      description: Must be 8-32 characters and include 3/4 of lower case letter, upper case letters, numeric, special. Cannot include username.
+      example: B@12abc!!!
+      writeOnly: true

@@ -16,6 +16,7 @@
 #include "../model/eth_settings_response.h"
 eth_settings_response_t* instantiate_eth_settings_response(int include_optional);
 
+#include "test_eth_settings_request_dhcp.c"
 
 
 eth_settings_response_t* instantiate_eth_settings_response(int include_optional) {
@@ -24,13 +25,14 @@ eth_settings_response_t* instantiate_eth_settings_response(int include_optional)
     eth_settings_response = eth_settings_response_create(
       "192.168.1.1",
       "255.255.255.0",
-      null
+       // false, not to have infinite recursion
+      instantiate_eth_settings_request_dhcp(0)
     );
   } else {
     eth_settings_response = eth_settings_response_create(
       "192.168.1.1",
       "255.255.255.0",
-      null
+      NULL
     );
   }
 

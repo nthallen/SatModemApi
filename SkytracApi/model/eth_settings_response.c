@@ -8,7 +8,7 @@
 eth_settings_response_t *eth_settings_response_create(
     char *addr,
     char *mask,
-    any_type_t *dhcp
+    eth_settings_request_dhcp_t *dhcp
     ) {
     eth_settings_response_t *eth_settings_response_local_var = malloc(sizeof(eth_settings_response_t));
     if (!eth_settings_response_local_var) {
@@ -36,7 +36,7 @@ void eth_settings_response_free(eth_settings_response_t *eth_settings_response) 
         eth_settings_response->mask = NULL;
     }
     if (eth_settings_response->dhcp) {
-        _free(eth_settings_response->dhcp);
+        eth_settings_request_dhcp_free(eth_settings_response->dhcp);
         eth_settings_response->dhcp = NULL;
     }
     free(eth_settings_response);
@@ -67,13 +67,13 @@ cJSON *eth_settings_response_convertToJSON(eth_settings_response_t *eth_settings
     if (!eth_settings_response->dhcp) {
         goto fail;
     }
-    cJSON *dhcp_local_JSON = _convertToJSON(eth_settings_response->dhcp);
+    cJSON *dhcp_local_JSON = eth_settings_request_dhcp_convertToJSON(eth_settings_response->dhcp);
     if(dhcp_local_JSON == NULL) {
-        goto fail; // custom
+    goto fail; //model
     }
     cJSON_AddItemToObject(item, "dhcp", dhcp_local_JSON);
     if(item->child == NULL) {
-        goto fail;
+    goto fail;
     }
 
     return item;
@@ -89,7 +89,7 @@ eth_settings_response_t *eth_settings_response_parseFromJSON(cJSON *eth_settings
     eth_settings_response_t *eth_settings_response_local_var = NULL;
 
     // define the local variable for eth_settings_response->dhcp
-    _t *dhcp_local_nonprim = NULL;
+    eth_settings_request_dhcp_t *dhcp_local_nonprim = NULL;
 
     // eth_settings_response->addr
     cJSON *addr = cJSON_GetObjectItemCaseSensitive(eth_settings_responseJSON, "addr");
@@ -122,7 +122,7 @@ eth_settings_response_t *eth_settings_response_parseFromJSON(cJSON *eth_settings
     }
 
     
-    dhcp_local_nonprim = _parseFromJSON(dhcp); //custom
+    dhcp_local_nonprim = eth_settings_request_dhcp_parseFromJSON(dhcp); //nonprimitive
 
 
     eth_settings_response_local_var = eth_settings_response_create (
@@ -134,7 +134,7 @@ eth_settings_response_t *eth_settings_response_parseFromJSON(cJSON *eth_settings
     return eth_settings_response_local_var;
 end:
     if (dhcp_local_nonprim) {
-        _free(dhcp_local_nonprim);
+        eth_settings_request_dhcp_free(dhcp_local_nonprim);
         dhcp_local_nonprim = NULL;
     }
     return NULL;

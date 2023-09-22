@@ -30,7 +30,7 @@ wi_fi_settings_response_t *wi_fi_settings_response_create(
     int visible,
     quicksilver_web_api_wi_fi_settings_response_SECURITY_e security,
     char *wpa2_pwd,
-    any_type_t *dhcp
+    eth_settings_request_dhcp_t *dhcp
     ) {
     wi_fi_settings_response_t *wi_fi_settings_response_local_var = malloc(sizeof(wi_fi_settings_response_t));
     if (!wi_fi_settings_response_local_var) {
@@ -71,7 +71,7 @@ void wi_fi_settings_response_free(wi_fi_settings_response_t *wi_fi_settings_resp
         wi_fi_settings_response->wpa2_pwd = NULL;
     }
     if (wi_fi_settings_response->dhcp) {
-        _free(wi_fi_settings_response->dhcp);
+        eth_settings_request_dhcp_free(wi_fi_settings_response->dhcp);
         wi_fi_settings_response->dhcp = NULL;
     }
     free(wi_fi_settings_response);
@@ -148,13 +148,13 @@ cJSON *wi_fi_settings_response_convertToJSON(wi_fi_settings_response_t *wi_fi_se
     if (!wi_fi_settings_response->dhcp) {
         goto fail;
     }
-    cJSON *dhcp_local_JSON = _convertToJSON(wi_fi_settings_response->dhcp);
+    cJSON *dhcp_local_JSON = eth_settings_request_dhcp_convertToJSON(wi_fi_settings_response->dhcp);
     if(dhcp_local_JSON == NULL) {
-        goto fail; // custom
+    goto fail; //model
     }
     cJSON_AddItemToObject(item, "dhcp", dhcp_local_JSON);
     if(item->child == NULL) {
-        goto fail;
+    goto fail;
     }
 
     return item;
@@ -170,7 +170,7 @@ wi_fi_settings_response_t *wi_fi_settings_response_parseFromJSON(cJSON *wi_fi_se
     wi_fi_settings_response_t *wi_fi_settings_response_local_var = NULL;
 
     // define the local variable for wi_fi_settings_response->dhcp
-    _t *dhcp_local_nonprim = NULL;
+    eth_settings_request_dhcp_t *dhcp_local_nonprim = NULL;
 
     // wi_fi_settings_response->enabled
     cJSON *enabled = cJSON_GetObjectItemCaseSensitive(wi_fi_settings_responseJSON, "enabled");
@@ -265,7 +265,7 @@ wi_fi_settings_response_t *wi_fi_settings_response_parseFromJSON(cJSON *wi_fi_se
     }
 
     
-    dhcp_local_nonprim = _parseFromJSON(dhcp); //custom
+    dhcp_local_nonprim = eth_settings_request_dhcp_parseFromJSON(dhcp); //nonprimitive
 
 
     wi_fi_settings_response_local_var = wi_fi_settings_response_create (
@@ -282,7 +282,7 @@ wi_fi_settings_response_t *wi_fi_settings_response_parseFromJSON(cJSON *wi_fi_se
     return wi_fi_settings_response_local_var;
 end:
     if (dhcp_local_nonprim) {
-        _free(dhcp_local_nonprim);
+        eth_settings_request_dhcp_free(dhcp_local_nonprim);
         dhcp_local_nonprim = NULL;
     }
     return NULL;

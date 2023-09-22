@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 **visible** | **int** | Whether the SSID should be broadcast | 
 **security** | **quicksilver_web_api_wi_fi_settings_response_SECURITY_e** | The type of security to use | 
 **wpa2_pwd** | **char \*** | The WPA2 password. Must be 8-25 characters, with the exception that a blank string is allowed if security is open. | 
-**dhcp** | **any_type_t \*** |  | 
+**dhcp** | [**eth_settings_request_dhcp_t**](eth_settings_request_dhcp.md) \* |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

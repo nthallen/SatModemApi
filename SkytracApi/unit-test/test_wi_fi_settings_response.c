@@ -16,6 +16,7 @@
 #include "../model/wi_fi_settings_response.h"
 wi_fi_settings_response_t* instantiate_wi_fi_settings_response(int include_optional);
 
+#include "test_eth_settings_request_dhcp.c"
 
 
 wi_fi_settings_response_t* instantiate_wi_fi_settings_response(int include_optional) {
@@ -29,7 +30,8 @@ wi_fi_settings_response_t* instantiate_wi_fi_settings_response(int include_optio
       1,
       quicksilver_web_api_wi_fi_settings_response_SECURITY_"wpa2",
       "Quicksilver123456",
-      null
+       // false, not to have infinite recursion
+      instantiate_eth_settings_request_dhcp(0)
     );
   } else {
     wi_fi_settings_response = wi_fi_settings_response_create(
@@ -40,7 +42,7 @@ wi_fi_settings_response_t* instantiate_wi_fi_settings_response(int include_optio
       1,
       quicksilver_web_api_wi_fi_settings_response_SECURITY_"wpa2",
       "Quicksilver123456",
-      null
+      NULL
     );
   }
 

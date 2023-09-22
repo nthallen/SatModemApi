@@ -15,21 +15,21 @@
 
 typedef struct eth_settings_response_t eth_settings_response_t;
 
-#include "any_type.h"
+#include "eth_settings_request_dhcp.h"
 
 
 
 typedef struct eth_settings_response_t {
     char *addr; // string
     char *mask; // string
-    any_type_t *dhcp; // custom
+    struct eth_settings_request_dhcp_t *dhcp; //model
 
 } eth_settings_response_t;
 
 eth_settings_response_t *eth_settings_response_create(
     char *addr,
     char *mask,
-    any_type_t *dhcp
+    eth_settings_request_dhcp_t *dhcp
 );
 
 void eth_settings_response_free(eth_settings_response_t *eth_settings_response);

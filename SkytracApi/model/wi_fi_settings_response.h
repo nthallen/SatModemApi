@@ -15,7 +15,7 @@
 
 typedef struct wi_fi_settings_response_t wi_fi_settings_response_t;
 
-#include "any_type.h"
+#include "eth_settings_request_dhcp.h"
 
 // Enum SECURITY for wi_fi_settings_response
 
@@ -35,7 +35,7 @@ typedef struct wi_fi_settings_response_t {
     int visible; //boolean
     quicksilver_web_api_wi_fi_settings_response_SECURITY_e security; //enum
     char *wpa2_pwd; // string
-    any_type_t *dhcp; // custom
+    struct eth_settings_request_dhcp_t *dhcp; //model
 
 } wi_fi_settings_response_t;
 
@@ -47,7 +47,7 @@ wi_fi_settings_response_t *wi_fi_settings_response_create(
     int visible,
     quicksilver_web_api_wi_fi_settings_response_SECURITY_e security,
     char *wpa2_pwd,
-    any_type_t *dhcp
+    eth_settings_request_dhcp_t *dhcp
 );
 
 void wi_fi_settings_response_free(wi_fi_settings_response_t *wi_fi_settings_response);

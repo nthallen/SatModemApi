@@ -18,7 +18,7 @@ typedef struct gps_fix_t gps_fix_t;
 
 // Enum TYPE for gps_fix
 
-typedef enum  { quicksilver_web_api_gps_fix_TYPE_NULL = 0, quicksilver_web_api_gps_fix_TYPE_invalid, quicksilver_web_api_gps_fix_TYPE_time only, quicksilver_web_api_gps_fix_TYPE_dead reckoning, quicksilver_web_api_gps_fix_TYPE__2D, quicksilver_web_api_gps_fix_TYPE__3D } quicksilver_web_api_gps_fix_TYPE_e;
+typedef enum  { quicksilver_web_api_gps_fix_TYPE_NULL = 0, quicksilver_web_api_gps_fix_TYPE_invalid, quicksilver_web_api_gps_fix_TYPE_time_only, quicksilver_web_api_gps_fix_TYPE_dead_reckoning, quicksilver_web_api_gps_fix_TYPE__2D, quicksilver_web_api_gps_fix_TYPE__3D } quicksilver_web_api_gps_fix_TYPE_e;
 
 char* gps_fix_type_ToString(quicksilver_web_api_gps_fix_TYPE_e type);
 

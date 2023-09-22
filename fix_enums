@@ -1,0 +1,17 @@
+#! /bin/bash
+rm -f fix_enums.out
+grep -i "enum: .*[a-z] [a-z]" WebApi.yml |
+sed -e 's/^ *enum: \[//; s/\]//; s/, /\n/g' |
+sed -ne '/[a-zA-Z] [a-zA-Z]/ p' |
+while read pat; do
+  rep=$(echo $pat | sed -e 's/ /_/g')
+  # echo "replace '_$pat' with '_$rep'"
+  # echo "command is: " perl -pi.bak -e "'s/_$pat/_$rep/g'"
+  cat <<EOF
+find SkytracApi -name "*.h" |
+  xargs perl -pi.bak -e 's/_$pat/_$rep/g'
+EOF
+done >>fix_enums.out
+. ./fix_enums.out
+rm -f fix_enums.out
+

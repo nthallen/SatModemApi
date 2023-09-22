@@ -1,0 +1,6 @@
+#! /bin/bash
+mkdir SkytracApiPerl
+cd SkytracApiPerl
+java -jar ../openapi-generator-cli-7.0.1.jar generate \
+  --input-spec ../WebApi.yml \
+  --generator-name perl

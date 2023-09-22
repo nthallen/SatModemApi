@@ -2146,11 +2146,6 @@ components:
         - addr
         - mask
         - dhcp
-        properties:
-          dhcp:
-            required:
-            - enabled
-            - ranges
 
     GpsKeepOn:
       type: boolean
@@ -2217,11 +2212,6 @@ components:
         - security
         - wpa2Pwd
         - dhcp
-        properties:
-          dhcp:
-            required:
-            - enabled
-            - ranges
 
     IrdSettings:
       type: object
